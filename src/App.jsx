@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Papa from "papaparse";
 import { csvToGeoJSON, detectCoordinateColumns } from "./utils/csvToGeojson";
+import { MapPreview } from "./components/MapPreview";
 import {
   Theme,
   Container,
@@ -435,13 +436,18 @@ function App() {
                   </Badge>
                 </Flex>
 
-                <Tabs.Root defaultValue="formatted">
+                <Tabs.Root defaultValue="map">
                   <Tabs.List>
+                    <Tabs.Trigger value="map">Map</Tabs.Trigger>
                     <Tabs.Trigger value="formatted">Formatted</Tabs.Trigger>
                     <Tabs.Trigger value="compact">Compact</Tabs.Trigger>
                   </Tabs.List>
 
                   <Box pt="3">
+                    <Tabs.Content value="map">
+                      <MapPreview geojson={geojson} />
+                    </Tabs.Content>
+
                     <Tabs.Content value="formatted">
                       <Card variant="surface">
                         <Box

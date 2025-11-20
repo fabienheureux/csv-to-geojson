@@ -1,7 +1,33 @@
 import { useState } from "react";
 import Papa from "papaparse";
 import { csvToGeoJSON, detectCoordinateColumns } from "./utils/csvToGeojson";
-import "./App.css";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./components/Card";
+import { Button } from "./components/Button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectPrimitive,
+} from "./components/Select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/Tabs";
+import { Alert, AlertDescription, AlertTitle } from "./components/Alert";
+import {
+  CheckCircledIcon,
+  CrossCircledIcon,
+  UploadIcon,
+  DownloadIcon,
+  ResetIcon,
+  GearIcon,
+  FileTextIcon,
+  LayersIcon,
+} from "@radix-ui/react-icons";
 
 function App() {
   const [file, setFile] = useState(null);
@@ -50,17 +76,14 @@ function App() {
             return;
           }
 
-          // Get headers
           const csvHeaders = results.meta.fields;
           setHeaders(csvHeaders);
 
-          // Auto-detect columns if not already configured
           if (!showColumnConfig) {
             const detected = detectCoordinateColumns(csvHeaders);
             if (detected.latColumn && detected.lonColumn) {
               setColumnConfig(detected);
             } else {
-              // Show column configuration if auto-detection failed
               setShowColumnConfig(true);
               setLoading(false);
               setError(
@@ -70,7 +93,6 @@ function App() {
             }
           }
 
-          // Check if columns exist
           if (!csvHeaders.includes(columnConfig.latColumn)) {
             setError(
               `Column "${columnConfig.latColumn}" not found in CSV. Available columns: ${csvHeaders.join(", ")}`,
@@ -87,7 +109,6 @@ function App() {
             return;
           }
 
-          // Convert to GeoJSON
           const result = csvToGeoJSON(
             results.data,
             columnConfig.latColumn,
@@ -136,155 +157,258 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <header className="header">
-        <h1>CSV to GeoJSON Converter</h1>
-        <p>
-          Convert CSV files with coordinates to GeoJSON format - 100%
-          client-side
-        </p>
-      </header>
-
-      <main className="main">
-        <div className="upload-section">
-          <div className="file-input-wrapper">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileChange}
-              id="file-input"
-              className="file-input"
-            />
-            <label htmlFor="file-input" className="file-label">
-              {file ? file.name : "Choose CSV file"}
-            </label>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <LayersIcon className="w-12 h-12 text-primary" />
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              CSV to GeoJSON
+            </h1>
           </div>
-
-          {headers.length > 0 && (
-            <div className="column-config">
-              <button
-                onClick={() => setShowColumnConfig(!showColumnConfig)}
-                className="config-toggle"
-              >
-                {showColumnConfig ? "Hide" : "Show"} Column Configuration
-              </button>
-
-              {showColumnConfig && (
-                <div className="config-fields">
-                  <div className="field">
-                    <label htmlFor="lat-column">Latitude Column:</label>
-                    <select
-                      id="lat-column"
-                      value={columnConfig.latColumn}
-                      onChange={(e) =>
-                        setColumnConfig({
-                          ...columnConfig,
-                          latColumn: e.target.value,
-                        })
-                      }
-                    >
-                      {headers.map((header) => (
-                        <option key={header} value={header}>
-                          {header}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="field">
-                    <label htmlFor="lon-column">Longitude Column:</label>
-                    <select
-                      id="lon-column"
-                      value={columnConfig.lonColumn}
-                      onChange={(e) =>
-                        setColumnConfig({
-                          ...columnConfig,
-                          lonColumn: e.target.value,
-                        })
-                      }
-                    >
-                      {headers.map((header) => (
-                        <option key={header} value={header}>
-                          {header}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="button-group">
-            <button
-              onClick={handleConvert}
-              disabled={!file || loading}
-              className="btn btn-primary"
-            >
-              {loading ? "Converting..." : "Convert to GeoJSON"}
-            </button>
-
-            {geojson && (
-              <>
-                <button onClick={handleDownload} className="btn btn-success">
-                  Download GeoJSON
-                </button>
-                <button onClick={handleReset} className="btn btn-secondary">
-                  Reset
-                </button>
-              </>
-            )}
-          </div>
-
-          {error && (
-            <div className="alert alert-error">
-              <strong>Error:</strong> {error}
-            </div>
-          )}
-
-          {stats && (
-            <div className="alert alert-success">
-              <h3>Conversion Successful!</h3>
-              <ul>
-                <li>Total rows: {stats.totalRows}</li>
-                <li>Points exported: {stats.exported}</li>
-                <li>Rows skipped: {stats.skipped}</li>
-              </ul>
-              {stats.errors.length > 0 && (
-                <details>
-                  <summary>View errors ({stats.errors.length})</summary>
-                  <ul className="error-list">
-                    {stats.errors.slice(0, 10).map((err, idx) => (
-                      <li key={idx}>
-                        Line {err.line}: {err.message}
-                      </li>
-                    ))}
-                    {stats.errors.length > 10 && (
-                      <li>... and {stats.errors.length - 10} more</li>
-                    )}
-                  </ul>
-                </details>
-              )}
-            </div>
-          )}
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Convert CSV files with coordinates to GeoJSON format. All processing
+            happens in your browser - fast, secure, and private.
+          </p>
         </div>
 
-        {geojson && (
-          <div className="preview-section">
-            <h2>GeoJSON Preview</h2>
-            <div className="json-preview">
-              <pre>{JSON.stringify(geojson, null, 2)}</pre>
+        {/* Main Card */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UploadIcon className="w-5 h-5" />
+              Upload & Convert
+            </CardTitle>
+            <CardDescription>
+              Select a CSV file with latitude and longitude columns
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* File Upload */}
+            <div className="space-y-2">
+              <label
+                htmlFor="file-upload"
+                className="block text-sm font-medium"
+              >
+                CSV File
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  id="file-upload"
+                  className="hidden"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-accent/50 transition-all"
+                >
+                  <FileTextIcon className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {file ? file.name : "Click to select CSV file"}
+                  </span>
+                </label>
+              </div>
             </div>
-          </div>
-        )}
-      </main>
 
-      <footer className="footer">
-        <p>
-          No data is uploaded to any server. All processing happens in your
-          browser.
-        </p>
-      </footer>
+            {/* Column Configuration */}
+            {headers.length > 0 && (
+              <div className="space-y-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowColumnConfig(!showColumnConfig)}
+                  className="w-full sm:w-auto"
+                >
+                  <GearIcon className="w-4 h-4 mr-2" />
+                  {showColumnConfig ? "Hide" : "Configure"} Columns
+                </Button>
+
+                {showColumnConfig && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Latitude Column
+                      </label>
+                      <Select
+                        value={columnConfig.latColumn}
+                        onValueChange={(value) =>
+                          setColumnConfig({ ...columnConfig, latColumn: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectPrimitive.Value placeholder="Select latitude column" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {headers.map((header) => (
+                            <SelectItem key={header} value={header}>
+                              {header}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Longitude Column
+                      </label>
+                      <Select
+                        value={columnConfig.lonColumn}
+                        onValueChange={(value) =>
+                          setColumnConfig({ ...columnConfig, lonColumn: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectPrimitive.Value placeholder="Select longitude column" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {headers.map((header) => (
+                            <SelectItem key={header} value={header}>
+                              {header}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                onClick={handleConvert}
+                disabled={!file || loading}
+                className="flex-1 sm:flex-initial"
+              >
+                {loading ? (
+                  <>Processing...</>
+                ) : (
+                  <>
+                    <LayersIcon className="w-4 h-4 mr-2" />
+                    Convert to GeoJSON
+                  </>
+                )}
+              </Button>
+
+              {geojson && (
+                <>
+                  <Button onClick={handleDownload} variant="secondary">
+                    <DownloadIcon className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button onClick={handleReset} variant="outline">
+                    <ResetIcon className="w-4 h-4 mr-2" />
+                    Reset
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Error Alert */}
+            {error && (
+              <Alert variant="destructive">
+                <CrossCircledIcon className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Success Alert */}
+            {stats && (
+              <Alert variant="success">
+                <CheckCircledIcon className="h-4 w-4" />
+                <AlertTitle>Conversion Successful!</AlertTitle>
+                <AlertDescription>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span>Total rows:</span>
+                      <span className="font-medium">{stats.totalRows}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Points exported:</span>
+                      <span className="font-medium text-green-600">
+                        {stats.exported}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Rows skipped:</span>
+                      <span className="font-medium">{stats.skipped}</span>
+                    </div>
+                  </div>
+                  {stats.errors.length > 0 && (
+                    <details className="mt-3">
+                      <summary className="cursor-pointer text-sm font-medium hover:underline">
+                        View errors ({stats.errors.length})
+                      </summary>
+                      <ul className="mt-2 space-y-1 text-xs max-h-32 overflow-y-auto">
+                        {stats.errors.slice(0, 10).map((err, idx) => (
+                          <li key={idx} className="text-muted-foreground">
+                            Line {err.line}: {err.message}
+                          </li>
+                        ))}
+                        {stats.errors.length > 10 && (
+                          <li className="text-muted-foreground font-medium">
+                            ... and {stats.errors.length - 10} more
+                          </li>
+                        )}
+                      </ul>
+                    </details>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Preview */}
+        {geojson && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Preview</CardTitle>
+              <CardDescription>
+                Your GeoJSON output with {geojson.features.length} feature
+                {geojson.features.length !== 1 ? "s" : ""}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="formatted" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="formatted">Formatted</TabsTrigger>
+                  <TabsTrigger value="compact">Compact</TabsTrigger>
+                </TabsList>
+                <TabsContent value="formatted" className="mt-4">
+                  <div className="bg-muted rounded-lg p-4 max-h-96 overflow-auto">
+                    <pre className="text-xs font-mono">
+                      {JSON.stringify(geojson, null, 2)}
+                    </pre>
+                  </div>
+                </TabsContent>
+                <TabsContent value="compact" className="mt-4">
+                  <div className="bg-muted rounded-lg p-4 max-h-96 overflow-auto break-all">
+                    <pre className="text-xs font-mono">
+                      {JSON.stringify(geojson)}
+                    </pre>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Footer */}
+        <div className="mt-12 text-center text-sm text-muted-foreground">
+          <p className="flex items-center justify-center gap-2">
+            <CheckCircledIcon className="w-4 h-4" />
+            No data is uploaded to any server. All processing happens in your
+            browser.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
